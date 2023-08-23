@@ -7,7 +7,7 @@ app.use(express.json());
 app.use(cors());
 
 const error = require("./middlewares/error");
-const userRoutes = require("./routes/userRoutes");
+const userRoutes = require("./routers/userRoutes");
 
 app.get("/", async (req, res) => {
   res.status(200).json({ msg: "Custom epoxy backend!!" });
