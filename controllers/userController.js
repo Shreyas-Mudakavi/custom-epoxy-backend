@@ -138,7 +138,7 @@ exports.verifyMobileFrgPwd = catchAsyncError(async (req, res, next) => {
   const { countryCode, phoneNumber, otp } = req.body;
 
   if (!countryCode || !phoneNumber || !otp) {
-    return res.status(401).json({ msg: "Enter all Required fields" });
+    return next(new ErrorHandler("Enter all Required fields", 401));
   }
 
   const verificationResponse = await client.verify
