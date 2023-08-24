@@ -103,7 +103,6 @@ exports.verifyMobileNumber = catchAsyncError(async (req, res, next) => {
       to: `+${countryCode}${phoneNumber}`,
       code: otp,
     });
-  console.log(verificationResponse);
 
   if (verificationResponse.valid) {
     // otp verified but user does not exists
@@ -125,7 +124,7 @@ exports.verifyMobileNumber = catchAsyncError(async (req, res, next) => {
       {
         userId: user._id,
       },
-      process.env.JWT_SECRET_KEY,
+      process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
     return res.status(200).json({ user, token });
