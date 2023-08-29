@@ -4,6 +4,8 @@ const catchAsyncError = require("../utils/catchAsyncError");
 const bcrypt = require("bcryptjs");
 const ErrorHandler = require("../utils/errorHandler");
 const dotenv = require("dotenv");
+const orderModel = require("../models/Order");
+const quotesModel = require("../models/Quotes");
 dotenv.config();
 
 const client = require("twilio")(
@@ -15,8 +17,16 @@ const client = require("twilio")(
 );
 
 exports.register = catchAsyncError(async (req, res, next) => {
-  const { username, mobile_no, email, password, dateOfBirth, address, gender } =
-    req.body;
+  const {
+    username,
+    mobile_no,
+    email,
+    password,
+    dateOfBirth,
+    address,
+    gender,
+    img_url,
+  } = req.body;
 
   const userExists = await userModel.findOne({ email: email });
   if (userExists) {
@@ -28,6 +38,7 @@ exports.register = catchAsyncError(async (req, res, next) => {
 
   const user = await userModel.create({
     username: username,
+    img_url: img_url,
     email: email,
     password: hashedPassword,
     dateOfBirth: dateOfBirth,
@@ -175,4 +186,57 @@ exports.changePassword = catchAsyncError(async (req, res, next) => {
   await user.save();
 
   res.status(200).json({ msg: "Password updated!" });
+});
+
+exports.getProfile = catchAsyncError(async (req, res, next) => {
+  const user = await userModel.findById(req.userId);
+
+  if (!user) {
+    return next(new ErrorHandler("User not found.", 404));
+  }
+
+  res.status(200).json({
+    message: "Profile details are as follows",
+    user: user,
+  });
+});
+
+exports.updateProfile = catchAsyncError(async (req, res, next) => {
+  const { username, email, dateOfBirth, address, gender, img_url } = req.body;
+
+  const user = await userModel.findByIdAndUpdate(
+    req.userId,
+    { username, email, dateOfBirth, address, gender, img_url },
+    {
+      new: true,
+      runValidators: true,
+      useFindAndModify: false,
+    }
+  );
+
+  res.status(200).json({
+    message: "Profile updated successfully",
+    user: user,
+  });
+});
+
+exports.deleteAccont = catchAsyncError(async (req, res, next) => {
+  const user = await userModel.findById(req.userId);
+
+  if (!user) {
+    return next(new ErrorHandler("User not found.", 404));
+  }
+  await userModel.findByIdAndDelete(req.userId);
+  const order = await orderModel.findOne({ user: req.userId });
+  if (order) {
+    await orderModel.findByIdAndDelete(order._id);
+  }
+  const quote = await quotesModel.findOne({ user: req.userId });
+  if (quote) {
+    await quotesModel.findByIdAndDelete(quote._id);
+  }
+
+  res.status(200).json({
+    message: "Account deleted successfully",
+  });
 });

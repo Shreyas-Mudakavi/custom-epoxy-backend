@@ -6,7 +6,11 @@ const {
   verifyMobileNumber,
   verifyMobileFrgPwd,
   changePassword,
+  getProfile,
+  updateProfile,
+  deleteAccont,
 } = require("../controllers/userController");
+const { auth } = require("../middlewares/auth");
 const router = express.Router();
 
 router.post("/register", register);
@@ -22,5 +26,11 @@ router.post("/verify-otp-forget", verifyMobileFrgPwd);
 
 // reset password
 router.put("/reset-password", changePassword);
+
+router.get("/get-profile", auth, getProfile);
+
+router.put("/update-profile", auth, updateProfile);
+
+router.delete("/delete-account", auth, deleteAccont);
 
 module.exports = router;
