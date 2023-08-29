@@ -43,6 +43,24 @@ const orderSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    priceAsPerQuote: {
+      netPrice: {
+        type: Number,
+        default: 0,
+      },
+      upfrontAmount: {
+        type: Number,
+        default: 0,
+      },
+      taxes: {
+        type: Number,
+        default: 0,
+      },
+      hiddenCost: {
+        type: Number,
+        default: 0,
+      },
+    },
   },
 
   {
