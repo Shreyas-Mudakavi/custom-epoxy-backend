@@ -85,6 +85,7 @@ exports.sendOtp = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("Enter all Required fields", 401));
   }
 
+  console.log("sending....");
   // sending otp to the provided mobile number
   const otpResponse = await client.verify
     .services("VAf18466e31504db957862e60d5fba0872")
@@ -92,8 +93,9 @@ exports.sendOtp = catchAsyncError(async (req, res, next) => {
       to: `+${countryCode}${phoneNumber}`,
       channel: "sms",
     });
+  console.log(otpResponse);
 
-  res.status(201).json({ msg: "OTP send succesfully!" });
+  res.status(200).json({ msg: "OTP send succesfully!" });
 });
 
 exports.verifyMobileNumber = catchAsyncError(async (req, res, next) => {
