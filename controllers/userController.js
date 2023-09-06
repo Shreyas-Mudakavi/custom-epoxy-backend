@@ -33,8 +33,11 @@ exports.register = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("User already exists!", 409));
   }
 
-  const salt = bcrypt.genSaltSync(10);
-  const hashedPassword = bcrypt.hashSync(password, salt);
+  let hashedPassword = "";
+  if (password) {
+    const salt = bcrypt.genSaltSync(10);
+    hashedPassword = bcrypt.hashSync(password, salt);
+  }
 
   const user = await userModel.create({
     username: username,

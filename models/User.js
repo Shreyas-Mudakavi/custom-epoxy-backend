@@ -23,7 +23,7 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: true,
+      // required: true,
     },
     dateOfBirth: {
       type: Date,
@@ -32,6 +32,7 @@ const userSchema = new mongoose.Schema(
     mobile: {
       type: Number,
       required: true,
+      unique: true,
     },
     address: {
       type: String,
