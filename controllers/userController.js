@@ -131,10 +131,10 @@ exports.verifyMobileNumber = catchAsyncError(async (req, res, next) => {
     }
 
     // comparing passwords
-    const decryptedPw = await bcrypt.compare(password, user.password);
-    if (!decryptedPw) {
-      return next(new ErrorHandler("Invalid email or password!", 401));
-    }
+    // const decryptedPw = await bcrypt.compare(password, user.password);
+    // if (!decryptedPw) {
+    //   return next(new ErrorHandler("Invalid email or password!", 401));
+    // }
 
     const token = jwt.sign(
       {

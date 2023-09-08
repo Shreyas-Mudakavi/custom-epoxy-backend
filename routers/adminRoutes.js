@@ -16,6 +16,7 @@ const {
   getAllTransactions,
   getTransaction,
   deleteTransaction,
+  addProductImage,
 } = require("../controllers/adminController");
 
 const router = express.Router();
@@ -39,5 +40,7 @@ router.delete("/delete-quote/:id", auth, isAdmin, deleteQuote);
 router.get("/getAllTransactions/all", auth, isAdmin, getAllTransactions);
 router.get("/getTransaction/:id", auth, isAdmin, getTransaction);
 router.get("/delete-Transaction/:id", auth, isAdmin, deleteTransaction);
+
+router.post("/add-prodImage", auth, isAdmin, addProductImage);
 
 module.exports = router;

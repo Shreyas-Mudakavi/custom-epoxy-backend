@@ -7,6 +7,7 @@ const catchAsyncError = require("../utils/catchAsyncError");
 const ErrorHandler = require("../utils/errorHandler");
 const quotesModel = require("../models/Quotes");
 const transactionModel = require("../models/Transactions");
+const productImageModel = require("../models/ProductImage");
 
 exports.adminLogin = catchAsyncError(async (req, res, next) => {
   const { email, password } = req.body;
@@ -281,4 +282,22 @@ exports.deleteTransaction = catchAsyncError(async (req, res, next) => {
   await transactionModel.findByIdAndDelete(req.params.id);
 
   res.status(200).json({ message: "Transaction deleted" });
+});
+
+exports.addProductImage = catchAsyncError(async (req, res, next) => {
+  const { wood, color, shape, imageUrl } = req.body;
+
+  const addProductImage = await productImageModel.create({
+    wood: wood,
+    shape: shape,
+    color: color,
+    image: imageUrl,
+  });
+
+  const savedProductImage = await addProductImage.save();
+
+  res.status(201).json({
+    message: "Product image added!",
+    savedProductImage: savedProductImage,
+  });
 });
