@@ -2,6 +2,8 @@ const catchAsyncError = require("../utils/catchAsyncError");
 const orderModel = require("../models/Order");
 const quotesModel = require("../models/Quotes");
 const { v4: uuid } = require("uuid");
+const productImageModel = require("../models/ProductImage");
+const ErrorHandler = require("../utils/errorHandler");
 
 exports.newQuote = catchAsyncError(async (req, res, next) => {
   const {
@@ -44,5 +46,26 @@ exports.newQuote = catchAsyncError(async (req, res, next) => {
   res.status(201).json({
     message: "Quote request successful",
     quote_descripition: savedQuote,
+  });
+});
+
+exports.getImage = catchAsyncError(async (req, res, next) => {
+  const { wood, color, shape } = req.body;
+
+  const tableImage = await productImageModel
+    .findOne({
+      wood: { $regex: wood, $options: "i" },
+      shape: { $regex: shape, $options: "i" },
+      color: { $regex: color, $options: "i" },
+    })
+    .select("image");
+
+  if (!tableImage) {
+    return next(new ErrorHandler("Image will be added soon!", 404));
+  }
+
+  res.status(200).json({
+    message: "Quote image",
+    image: tableImage,
   });
 });
