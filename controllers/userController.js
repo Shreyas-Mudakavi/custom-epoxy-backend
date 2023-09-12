@@ -143,7 +143,9 @@ exports.verifyMobileNumber = catchAsyncError(async (req, res, next) => {
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
-    return res.status(200).json({ user, token });
+    return res
+      .status(200)
+      .json({ message: "User is registered!", user, token });
   } else {
     return next(new ErrorHandler("Wrong OTP!", 400));
   }
