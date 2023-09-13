@@ -52,6 +52,10 @@ exports.newQuote = catchAsyncError(async (req, res, next) => {
 exports.getImage = catchAsyncError(async (req, res, next) => {
   const { wood, color, shape } = req.body;
 
+  if (!wood || !color || !shape) {
+    return next(new ErrorHandler("Enter all Required fields", 401));
+  }
+
   const tableImage = await productImageModel
     .findOne({
       wood: { $regex: wood, $options: "i" },
