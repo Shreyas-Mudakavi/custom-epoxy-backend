@@ -6,6 +6,7 @@ const ErrorHandler = require("../utils/errorHandler");
 const dotenv = require("dotenv");
 const orderModel = require("../models/Order");
 const quotesModel = require("../models/Quotes");
+const { s3Uploadv2 } = require("../utils/s3");
 dotenv.config();
 
 const client = require("twilio")(
@@ -206,6 +207,15 @@ exports.getProfile = catchAsyncError(async (req, res, next) => {
     message: "Profile details are as follows",
     user: user,
   });
+});
+
+exports.postSingleImage = catchAsyncError(async (req, res, next) => {
+  const file = req.file;
+  if (!file) return next(new ErrorHandler("Invalid Image", 401));
+
+  const results = await s3Uploadv2(file);
+  const location = results.Location && results.Location;
+  return res.status(201).json({ data: location });
 });
 
 exports.updateProfile = catchAsyncError(async (req, res, next) => {

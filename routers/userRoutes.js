@@ -11,6 +11,7 @@ const {
   deleteAccont,
 } = require("../controllers/userController");
 const { auth } = require("../middlewares/auth");
+const { upload } = require("../utils/s3");
 const router = express.Router();
 
 router.post("/register", register);
@@ -29,7 +30,8 @@ router.put("/reset-password", changePassword);
 
 router.get("/get-profile", auth, getProfile);
 
-router.put("/update-profile", auth, updateProfile);
+router.post("/image", upload.single("image"), postSingleImage);
+router.put("/update-profile", auth,  updateProfile);
 
 router.delete("/delete-account", auth, deleteAccont);
 

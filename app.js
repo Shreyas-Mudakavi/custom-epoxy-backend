@@ -4,6 +4,7 @@ const app = express();
 require("dotenv").config();
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 const error = require("./middlewares/error");
