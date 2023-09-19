@@ -211,20 +211,27 @@ exports.getProfile = catchAsyncError(async (req, res, next) => {
 exports.updateProfile = catchAsyncError(async (req, res, next) => {
   const { username, email, dateOfBirth, address, gender, img_url } = req.body;
 
-  const user = await userModel.findByIdAndUpdate(
-    req.userId,
-    { username, email, dateOfBirth, address, gender, img_url },
-    {
-      new: true,
-      runValidators: true,
-      useFindAndModify: false,
-    }
-  );
+  const checkAvailable = await userModel.findOne({ _id: req.userId });
 
-  res.status(200).json({
-    message: "Profile updated successfully",
-    user: user,
-  });
+  if (checkAvailable) {
+    const user = await userModel.findByIdAndUpdate(
+      req.userId,
+      // { username, email, dateOfBirth, address, gender, img_url },
+      req.body,
+      {
+        new: true,
+        // runValidators: true,
+        // useFindAndModify: false,
+      }
+    );
+
+    return res.status(200).json({
+      message: "Profile updated successfully",
+      user: user,
+    });
+  } else {
+    return next(new ErrorHandler("User not found.", 404));
+  }
 });
 
 exports.deleteAccont = catchAsyncError(async (req, res, next) => {
