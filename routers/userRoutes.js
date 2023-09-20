@@ -9,6 +9,7 @@ const {
   getProfile,
   updateProfile,
   deleteAccont,
+  postSingleImage,
 } = require("../controllers/userController");
 const { auth } = require("../middlewares/auth");
 const { upload } = require("../utils/s3");
@@ -31,7 +32,7 @@ router.put("/reset-password", changePassword);
 router.get("/get-profile", auth, getProfile);
 
 router.post("/image", upload.single("image"), postSingleImage);
-router.put("/update-profile", auth,  updateProfile);
+router.put("/update-profile", auth, updateProfile);
 
 router.delete("/delete-account", auth, deleteAccont);
 
