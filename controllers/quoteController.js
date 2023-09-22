@@ -62,7 +62,7 @@ exports.getImage = catchAsyncError(async (req, res, next) => {
       shape: { $regex: shape, $options: "i" },
       color: { $regex: color, $options: "i" },
     })
-    .select("image");
+    .select("images");
 
   if (!tableImage) {
     return next(new ErrorHandler("Image will be added soon!", 404));

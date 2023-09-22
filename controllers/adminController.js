@@ -8,6 +8,7 @@ const ErrorHandler = require("../utils/errorHandler");
 const quotesModel = require("../models/Quotes");
 const transactionModel = require("../models/Transactions");
 const productImageModel = require("../models/ProductImage");
+const { s3Uploadv2, s3UploadMulti } = require("../utils/s3");
 
 exports.adminLogin = catchAsyncError(async (req, res, next) => {
   const { email, password } = req.body;
@@ -285,13 +286,29 @@ exports.deleteTransaction = catchAsyncError(async (req, res, next) => {
 });
 
 exports.addProductImage = catchAsyncError(async (req, res, next) => {
-  const { wood, color, shape, imageUrl } = req.body;
+  const { wood, color, shape, images } = req.body;
+
+  // function getMultipleRandom(arr, num) {
+  //   const shuffled = [...arr].sort(() => 0.5 - Math.random());
+
+  //   return shuffled.slice(0, num);
+  // }
+  // const quoteImg = getMultipleRandom(images, 2);
+
+  const alreadyImageExists = await productImageModel.findOne({
+    wood: { $regex: wood, $options: "i" },
+    shape: { $regex: shape, $options: "i" },
+    color: { $regex: color, $options: "i" },
+  });
+  if (alreadyImageExists) {
+    return next(new ErrorHandler("Image already added!", 409));
+  }
 
   const addProductImage = await productImageModel.create({
     wood: wood,
     shape: shape,
     color: color,
-    image: imageUrl,
+    images: images,
   });
 
   const savedProductImage = await addProductImage.save();
@@ -300,4 +317,28 @@ exports.addProductImage = catchAsyncError(async (req, res, next) => {
     message: "Product image added!",
     savedProductImage: savedProductImage,
   });
+});
+
+exports.postSingleImage = catchAsyncError(async (req, res, next) => {
+  const file = req.file;
+  if (!file) return next(new ErrorHandler("Invalid Image", 401));
+
+  const results = await s3Uploadv2(file);
+  const location = results.Location && results.Location;
+  return res.status(201).json({ data: { location } });
+});
+
+exports.postMultipleImages = catchAsyncError(async (req, res, next) => {
+  const files = req.files;
+  if (files) {
+    const results = await s3UploadMulti(files);
+    console.log(results);
+    let location = [];
+    results.filter((result) => {
+      location.push(result.Location);
+    });
+    return res.status(201).json({ data: { location } });
+  } else {
+    return next(new ErrorHandler("Invalid Image", 401));
+  }
 });

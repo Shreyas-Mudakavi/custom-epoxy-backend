@@ -17,11 +17,17 @@ const {
   getTransaction,
   deleteTransaction,
   addProductImage,
+  postSingleImage,
+  postMultipleImages,
 } = require("../controllers/adminController");
+const { upload } = require("../utils/s3");
 
 const router = express.Router();
 
 router.post("/login", adminLogin);
+
+router.post("/image", upload.single("image"), postSingleImage);
+router.post("/multi-image", upload.array("image"), postMultipleImages);
 
 router.get("/users/all", auth, isAdmin, getAllUsers);
 router.get("/users/:id", auth, isAdmin, getUser);
