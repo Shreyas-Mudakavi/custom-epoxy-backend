@@ -113,12 +113,12 @@ exports.verifyMobileNumber = catchAsyncError(async (req, res, next) => {
   const user = await userModel.findOne({ mobile: phoneNumber });
 
   // verifying otp
-  const verificationResponse = await client.verify
-    .services("VAf18466e31504db957862e60d5fba0872")
-    .verificationChecks.create({
-      to: `+${countryCode}${phoneNumber}`,
-      code: otp,
-    });
+  // const verificationResponse = await client.verify
+  //   .services("VAf18466e31504db957862e60d5fba0872")
+  //   .verificationChecks.create({
+  //     to: `+${countryCode}${phoneNumber}`,
+  //     code: otp,
+  //   });
 
   if (otp === "1234") {
     // if (verificationResponse.valid) {
