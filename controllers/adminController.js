@@ -319,6 +319,71 @@ exports.addProductImage = catchAsyncError(async (req, res, next) => {
   });
 });
 
+exports.getAllQuoteImages = catchAsyncError(async (req, res, next) => {
+  const quoteImagesCount = await productImageModel.countDocuments();
+
+  let query = {};
+  if (req.query.wood) {
+    query = {
+      wood: {
+        $regex: req.query.wood,
+        $options: "i",
+      },
+    };
+  }
+
+  if (req.query.wood !== "all") {
+    query.wood = req.query.wood;
+
+    console.log(req.query);
+
+    const apiFeature = new APIFeatures(
+      productImageModel.find(query).sort({ createdAt: -1 }),
+      req.query
+    );
+
+    let quoteImages = await apiFeature.query;
+    let filteredQuoteImagesCount = quoteImages.length;
+
+    apiFeature.pagination();
+    quoteImages = await apiFeature.query.clone();
+
+    return res.status(200).json({ quoteImages, filteredQuoteImagesCount });
+  }
+
+  const apiFeature = new APIFeatures(
+    productImageModel.find().sort({ createdAt: -1 }),
+    req.query
+  );
+
+  let quoteImages = await apiFeature.query;
+  let filteredQuoteImagesCount = quoteImages.length;
+  if (req.query.resultPerPage && req.query.currentPage) {
+    apiFeature.pagination();
+    quoteImages = await apiFeature.query.clone();
+  }
+
+  res.status(200).json({ quoteImages, filteredQuoteImagesCount });
+});
+
+exports.deleteQuoteImage = catchAsyncError(async (req, res, next) => {
+  const quoteImage = await productImageModel.findById(req.params.id);
+
+  if (!quoteImage) return next(new ErrorHandler("Quote image not found.", 404));
+
+  await productImageModel.findByIdAndDelete(req.params.id);
+
+  res.status(200).json({ message: "Quote image deleted." });
+});
+
+exports.getQuoteImage = catchAsyncError(async (req, res, next) => {
+  const quoteImage = await productImageModel.findById(req.params.id);
+
+  if (!quoteImage) return next(new ErrorHandler("Quote image not found.", 404));
+
+  res.status(200).json({ quoteImage: quoteImage });
+});
+
 exports.postSingleImage = catchAsyncError(async (req, res, next) => {
   const file = req.file;
   if (!file) return next(new ErrorHandler("Invalid Image", 401));
