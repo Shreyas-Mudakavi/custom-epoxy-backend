@@ -384,6 +384,16 @@ exports.getQuoteImage = catchAsyncError(async (req, res, next) => {
   res.status(200).json({ quoteImage: quoteImage });
 });
 
+exports.updateQuoteImage = catchAsyncError(async (req, res, next) => {
+  const updatedQuoteImage = await productImageModel.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    { new: true }
+  );
+
+  res.status(200).json({ updatedQuoteImage: updatedQuoteImage });
+});
+
 exports.postSingleImage = catchAsyncError(async (req, res, next) => {
   const file = req.file;
   if (!file) return next(new ErrorHandler("Invalid Image", 401));

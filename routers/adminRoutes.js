@@ -22,6 +22,7 @@ const {
   getAllQuoteImages,
   deleteQuoteImage,
   getQuoteImage,
+  updateQuoteImage,
 } = require("../controllers/adminController");
 const { upload } = require("../utils/s3");
 
@@ -53,6 +54,7 @@ router.get("/delete-Transaction/:id", auth, isAdmin, deleteTransaction);
 router.post("/add-prodImage", auth, isAdmin, addProductImage);
 router.get("/quoteImages/all", auth, isAdmin, getAllQuoteImages);
 router.get("/quoteImage/:id", auth, isAdmin, getQuoteImage);
+router.put("/quoteImage/:id", auth, isAdmin, updateQuoteImage);
 router.delete("/quoteImage/:id", auth, isAdmin, deleteQuoteImage);
 
 module.exports = router;
