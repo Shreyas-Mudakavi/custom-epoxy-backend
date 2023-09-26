@@ -407,7 +407,6 @@ exports.postMultipleImages = catchAsyncError(async (req, res, next) => {
   const files = req.files;
   if (files) {
     const results = await s3UploadMulti(files);
-    console.log(results);
     let location = [];
     results.filter((result) => {
       location.push(result.Location);
