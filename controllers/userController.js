@@ -219,19 +219,28 @@ exports.postSingleImage = catchAsyncError(async (req, res, next) => {
 });
 
 exports.updateProfile = catchAsyncError(async (req, res, next) => {
-  const { username, email, dateOfBirth, address, gender, img_url } = req.body;
-
   const checkAvailable = await userModel.findOne({ _id: req.userId });
 
   if (checkAvailable) {
+    const file = req.file;
+    if (!file) return next(new ErrorHandler("Invalid Image", 401));
+
+    const results = await s3Uploadv2(file);
+    const location = results.Location && results.Location;
+
     const user = await userModel.findByIdAndUpdate(
       req.userId,
-      // { username, email, dateOfBirth, address, gender, img_url },
-      req.body,
+      {
+        username: req.body.username,
+        email: req.body.email,
+        dateOfBirth: req.body.email,
+        address: req.body.address,
+        gender: req.body.gender,
+        img_url: location,
+      },
+      // req.body,
       {
         new: true,
-        // runValidators: true,
-        // useFindAndModify: false,
       }
     );
 

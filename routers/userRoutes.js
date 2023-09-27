@@ -32,7 +32,7 @@ router.put("/reset-password", changePassword);
 router.get("/get-profile", auth, getProfile);
 
 router.post("/image", upload.single("image"), postSingleImage);
-router.put("/update-profile", auth, updateProfile);
+router.put("/update-profile", auth, upload.single("image"), updateProfile);
 
 router.delete("/delete-account", auth, deleteAccont);
 
