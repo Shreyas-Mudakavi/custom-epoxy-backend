@@ -233,7 +233,7 @@ exports.updateProfile = catchAsyncError(async (req, res, next) => {
       {
         username: req.body.username,
         email: req.body.email,
-        dateOfBirth: req.body.email,
+        dateOfBirth: req.body.dateOfBirth,
         address: req.body.address,
         gender: req.body.gender,
         img_url: location,
