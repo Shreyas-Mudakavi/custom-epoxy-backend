@@ -147,9 +147,16 @@ exports.cancelOrder = catchAsyncError(async (req, res, next) => {
 
   const updatedOrder = await orderModel.findByIdAndUpdate(
     req.params.id,
-    { status: "Cancelled" },
+    { status: "Cancelled", paymentMethod: "CANCELLED" },
     { new: true }
   );
+
+  const transaction = await transactionModel.findOne({ user: order.user });
+  if (transaction) {
+    await transactionModel.findByIdAndUpdate(transaction._id, {
+      status: "CANCELLED",
+    });
+  }
 
   res.status(200).json({
     message: "Quote request cancelled",
