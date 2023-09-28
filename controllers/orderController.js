@@ -143,10 +143,17 @@ exports.cancelOrder = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("Invalid order id!", 404));
   }
 
-  await orderModel.findByIdAndDelete(req.params.id);
+  // await orderModel.findByIdAndDelete(req.params.id);
+
+  const updatedOrder = await orderModel.findByIdAndUpdate(
+    req.params.id,
+    { status: "Cancelled" },
+    { new: true }
+  );
 
   res.status(200).json({
     message: "Quote request cancelled",
+    updatedOrder: updatedOrder,
   });
 });
 
