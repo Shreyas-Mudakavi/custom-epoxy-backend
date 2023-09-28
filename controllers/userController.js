@@ -222,21 +222,25 @@ exports.updateProfile = catchAsyncError(async (req, res, next) => {
   const checkAvailable = await userModel.findOne({ _id: req.userId });
 
   if (checkAvailable) {
-    const file = req.file;
-    if (!file) return next(new ErrorHandler("Invalid Image", 401));
+    let location = "";
 
-    const results = await s3Uploadv2(file);
-    const location = results.Location && results.Location;
+    if (req.file) {
+      const file = req.file;
+      if (!file) return next(new ErrorHandler("Invalid Image", 401));
+
+      const results = await s3Uploadv2(file);
+      location = results.Location && results.Location;
+    }
 
     const user = await userModel.findByIdAndUpdate(
       req.userId,
       {
-        username: req.body.username,
-        email: req.body.email,
-        dateOfBirth: req.body.dateOfBirth,
-        address: req.body.address,
-        gender: req.body.gender,
-        img_url: location,
+        username: req.body.username || checkAvailable.username,
+        email: req.body.email || checkAvailable.email,
+        dateOfBirth: req.body.dateOfBirth || checkAvailable.dateOfBirth,
+        address: req.body.address || checkAvailable.address,
+        gender: req.body.gender || checkAvailable.gender,
+        img_url: location || checkAvailable.img_url,
       },
       // req.body,
       {
