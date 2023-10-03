@@ -13,7 +13,6 @@ const { s3Uploadv2, s3UploadMulti } = require("../utils/s3");
 exports.adminLogin = catchAsyncError(async (req, res, next) => {
   const { email, password } = req.body;
 
-  console.log(req.body);
   if (!email || !password)
     return next(new ErrorHandler("Please enter your email and password", 400));
 
@@ -88,7 +87,7 @@ exports.deleteAccont = catchAsyncError(async (req, res, next) => {
   if (!user) {
     return next(new ErrorHandler("User not found.", 404));
   }
-  await userModel.findByIdAndDelete(req.userId);
+  await userModel.findByIdAndDelete(req.params.id);
 
   const order = await orderModel.findOne({ user: user._id });
   if (order) {
