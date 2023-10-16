@@ -79,7 +79,7 @@ exports.getReceipt = catchAsyncError(async (req, res, next) => {
   // console.log("res ", results);
 
   // res.setHeader("Content-Type", "application/pdf");
-  res.status(200).json({ link: results.Location });
+  res.status(200).json({ link: results.Location, updatedAt: order.updatedAt });
 });
 
 exports.getOrderReceipt = catchAsyncError(async (req, res, next) => {
