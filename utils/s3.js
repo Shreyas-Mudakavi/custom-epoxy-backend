@@ -19,6 +19,22 @@ exports.s3Uploadv2 = async (file) => {
   return await s3.upload(param).promise();
 };
 
+exports.s3UploadRportv2 = async (file) => {
+  const s3 = new S3({
+    accessKeyId: process.env.AWS_ACCESS_KEY,
+    secretAccessKey: process.env.AWS_SECRET_KEY,
+    region: process.env.AWS_BUCKET_REGION,
+  });
+
+  const param = {
+    Bucket: process.env.AWS_BUCKET_NAME,
+    Key: `uploads/${Date.now().toString()}-customEpoxyOutput.pdf`,
+    Body: file,
+  };
+
+  return await s3.upload(param).promise();
+};
+
 exports.s3UploadMulti = async (files) => {
   const s3 = new S3({
     accessKeyId: process.env.AWS_ACCESS_KEY,
@@ -42,7 +58,10 @@ exports.s3UploadMulti = async (files) => {
 const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype.split("/")[0] === "image") {
+  if (
+    file.mimetype.split("/")[0] === "image" ||
+    file.mimetype.split("/")[1] === "pdf"
+  ) {
     req.video_file = false;
     cb(null, true);
     //   } else if (file.mimetype.split("/")[0] === "video") {

@@ -12,13 +12,20 @@ const orderSchema = new mongoose.Schema(
       ref: "Quotes",
       required: true,
     },
+    transaction: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Transactions",
+      },
+    ],
     status: {
       type: String,
       default: "Quote Requested",
       enum: [
         "Quote Received",
         "Quote Requested",
-        "In Process",
+        "Quote Accepted",
+        "In Progress",
         "Approved",
         "Manufacture",
         "Out For Delivery",
@@ -26,11 +33,11 @@ const orderSchema = new mongoose.Schema(
         "Cancelled",
       ],
     },
-    paymentStatus: {
-      type: String,
-      default: "PENDING",
-      enum: ["COMPLETED", "PENDING", "CANCELLED"],
-    },
+    // paymentStatus: {
+    //   type: String,
+    //   default: "PENDING",
+    //   enum: ["COMPLETED", "PENDING", "CANCELLED"],
+    // },
     orderNumber: {
       type: String,
       required: true,
@@ -38,10 +45,6 @@ const orderSchema = new mongoose.Schema(
     paymentMethod: {
       type: String,
       enum: ["Online", "Offline"],
-    },
-    total: {
-      type: Number,
-      default: 0,
     },
     priceAsPerQuote: {
       netPrice: {
@@ -60,6 +63,18 @@ const orderSchema = new mongoose.Schema(
         type: Number,
         default: 0,
       },
+      total: {
+        type: Number,
+        default: 0,
+      },
+    },
+    Outstanding_amount: {
+      type: Number,
+      default: 0,
+    },
+    negotiation: {
+      type: Boolean,
+      default: false,
     },
   },
 

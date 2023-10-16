@@ -104,12 +104,10 @@ exports.deleteAccont = catchAsyncError(async (req, res, next) => {
 });
 
 exports.getAllOrders = catchAsyncError(async (req, res, next) => {
-  console.log("req.query", req.query);
-
   let query = {};
   if (req.query.orderId) {
     query = {
-      orderId: {
+      orderNumber: {
         $regex: req.query.orderId,
         $options: "i",
       },
@@ -118,7 +116,6 @@ exports.getAllOrders = catchAsyncError(async (req, res, next) => {
 
   if (req.query.status !== "all") query.status = req.query.status;
 
-  console.log("query", query);
   const apiFeature = new APIFeatures(
     orderModel
       .find(query)
@@ -151,10 +148,63 @@ exports.getOrderById = catchAsyncError(async (req, res, next) => {
   res.status(200).json({ order: order });
 });
 
+exports.updateOrderPriceObj = catchAsyncError(async (req, res, next) => {
+  const { id } = req.params;
+  const {
+    status,
+    netPrice,
+    upfrontAmount,
+    taxes,
+    hiddenCost,
+    total,
+    negotiation,
+  } = req.body;
+  const order = await orderModel.findById(id);
+
+  if (!order) return next(new ErrorHandler("Order not found.", 404));
+
+  if (negotiation) {
+    const updatedOrder = await orderModel.findByIdAndUpdate(
+      id,
+      {
+        priceAsPerQuote: {
+          netPrice,
+          upfrontAmount,
+          taxes,
+          hiddenCost,
+          total,
+        },
+        Outstanding_amount: total,
+        negotiation: false,
+      },
+      { new: true, runValidators: true }
+    );
+
+    return res.status(200).json({ order: updatedOrder });
+  } else {
+    const updatedOrder = await orderModel.findByIdAndUpdate(
+      id,
+      {
+        status,
+        Outstanding_amount: total,
+        priceAsPerQuote: {
+          netPrice,
+          upfrontAmount,
+          taxes,
+          hiddenCost,
+          total,
+        },
+      },
+      { new: true, runValidators: true }
+    );
+
+    return res.status(200).json({ order: updatedOrder });
+  }
+});
+
 exports.updateOrderStatus = catchAsyncError(async (req, res, next) => {
   const { id } = req.params;
-  const { status, netPrice, upfrontAmount, taxes, hiddenCost, total } =
-    req.body;
+  const { status } = req.body;
   const order = await orderModel.findById(id);
 
   if (!order) return next(new ErrorHandler("Order not found.", 404));
@@ -162,14 +212,7 @@ exports.updateOrderStatus = catchAsyncError(async (req, res, next) => {
   const updatedOrder = await orderModel.findByIdAndUpdate(
     id,
     {
-      status,
-      total,
-      priceAsPerQuote: {
-        netPrice,
-        upfrontAmount,
-        taxes,
-        hiddenCost,
-      },
+      status: status,
     },
     { new: true, runValidators: true }
   );
@@ -272,6 +315,21 @@ exports.getTransaction = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("Transaction not found.", 404));
 
   res.status(200).json({ transaction: transaction });
+});
+
+exports.updateTransaction = catchAsyncError(async (req, res, next) => {
+  const transaction = await transactionModel.findById(req.params.id);
+
+  if (!transaction)
+    return next(new ErrorHandler("Transaction not found.", 404));
+
+  const updatedTransaction = await transactionModel.findByIdAndUpdate(
+    req.params.id,
+    { status: req.body.status },
+    { new: true, runValidators: true }
+  );
+
+  res.status(200).json({ transaction: updatedTransaction });
 });
 
 exports.deleteTransaction = catchAsyncError(async (req, res, next) => {
@@ -413,5 +471,677 @@ exports.postMultipleImages = catchAsyncError(async (req, res, next) => {
     return res.status(201).json({ data: { location } });
   } else {
     return next(new ErrorHandler("Invalid Image", 401));
+  }
+});
+
+exports.getStatistics = catchAsyncError(async (req, res, next) => {
+  const { time } = req.params;
+  const date = new Date();
+  date.setHours(24, 0, 0, 0);
+  const month = date.getMonth() + 1;
+  const year = date.getFullYear();
+  let startDate = new Date(date.getFullYear(), 0, 1);
+  var days = Math.floor((date - startDate) / (24 * 60 * 60 * 1000));
+  var week = Math.ceil(days / 7);
+
+  if (time == "all") {
+    const users = await userModel.aggregate([
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+        },
+      },
+    ]);
+    const orders = await orderModel.aggregate([
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+        },
+      },
+    ]);
+    const payments = await transactionModel.aggregate([
+      {
+        $project: {
+          total: 1,
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: "$total" },
+        },
+      },
+    ]);
+    const transactions = await transactionModel.aggregate([
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+        },
+      },
+    ]);
+    const dailyUsers = await userModel.aggregate([
+      {
+        $project: {
+          month: { $month: "$createdAt" },
+
+          year: { $year: "$createdAt" },
+        },
+      },
+      {
+        $match: {
+          year: year,
+        },
+      },
+      {
+        $group: {
+          _id: "$month",
+          total: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+    const dailyOrders = await orderModel.aggregate([
+      {
+        $project: {
+          month: { $month: "$createdAt" },
+
+          year: { $year: "$createdAt" },
+        },
+      },
+      {
+        $match: {
+          year: year,
+        },
+      },
+      {
+        $group: {
+          _id: "$month",
+          total: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+    const dailyTransactions = await transactionModel.aggregate([
+      {
+        $project: {
+          month: { $month: "$createdAt" },
+
+          year: { $year: "$createdAt" },
+        },
+      },
+      {
+        $match: {
+          year: year,
+        },
+      },
+      {
+        $group: {
+          _id: "$month",
+          total: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+    const dailyPayments = await transactionModel.aggregate([
+      {
+        $project: {
+          month: { $month: "$createdAt" },
+
+          year: { $year: "$createdAt" },
+          total: 1,
+        },
+      },
+      {
+        $match: {
+          year: year,
+        },
+      },
+      {
+        $group: {
+          _id: "$month",
+          total: { $sum: "$total" },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+    return res.send({
+      users: users,
+      payments: payments,
+      orders: orders,
+      transactions: transactions,
+      dailyUsers,
+      dailyOrders,
+      dailyTransactions,
+      dailyPayments,
+    });
+  }
+  if (time == "daily") {
+    const users = await userModel.aggregate([
+      {
+        $match: {
+          $expr: {
+            $gt: [
+              "$createdAt",
+              { $dateSubtract: { startDate: date, unit: "day", amount: 1 } },
+            ],
+          },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+        },
+      },
+    ]);
+    const orders = await orderModel.aggregate([
+      {
+        $match: {
+          $expr: {
+            $gt: [
+              "$createdAt",
+              { $dateSubtract: { startDate: date, unit: "day", amount: 1 } },
+            ],
+          },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+        },
+      },
+    ]);
+    const payments = await transactionModel.aggregate([
+      {
+        $match: {
+          $expr: {
+            $gt: [
+              "$createdAt",
+              { $dateSubtract: { startDate: date, unit: "day", amount: 1 } },
+            ],
+          },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: "$total" },
+        },
+      },
+    ]);
+    const transactions = await transactionModel.aggregate([
+      {
+        $match: {
+          $expr: {
+            $gt: [
+              "$createdAt",
+              { $dateSubtract: { startDate: date, unit: "day", amount: 1 } },
+            ],
+          },
+        },
+      },
+
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+        },
+      },
+    ]);
+    const dailyUsers = await userModel.aggregate([
+      {
+        $match: {
+          $expr: {
+            $gt: [
+              "$createdAt",
+              { $dateSubtract: { startDate: date, unit: "day", amount: 6 } },
+            ],
+          },
+        },
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          total: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+    const dailyOrders = await orderModel.aggregate([
+      {
+        $match: {
+          $expr: {
+            $gt: [
+              "$createdAt",
+              { $dateSubtract: { startDate: date, unit: "day", amount: 6 } },
+            ],
+          },
+        },
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          total: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+    const dailyPayments = await transactionModel.aggregate([
+      {
+        $match: {
+          $expr: {
+            $gt: [
+              "$createdAt",
+              { $dateSubtract: { startDate: date, unit: "day", amount: 6 } },
+            ],
+          },
+        },
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          total: { $sum: "$total" },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+    const dailyTransactions = await transactionModel.aggregate([
+      {
+        $match: {
+          $expr: {
+            $gt: [
+              "$createdAt",
+              { $dateSubtract: { startDate: date, unit: "day", amount: 6 } },
+            ],
+          },
+        },
+      },
+
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          total: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+    return res.send({
+      users: users,
+      payments: payments,
+      orders: orders,
+      transactions: transactions,
+      dailyUsers,
+      dailyOrders,
+      dailyPayments,
+      dailyTransactions,
+    });
+  }
+  if (time == "weekly") {
+    const users = await userModel.aggregate([
+      {
+        $project: {
+          week: { $week: "$createdAt" },
+
+          year: { $year: "$createdAt" },
+        },
+      },
+      {
+        $match: {
+          year: year,
+          week: week,
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+        },
+      },
+    ]);
+    const payments = await transactionModel.aggregate([
+      {
+        $project: {
+          week: { $week: "$createdAt" },
+
+          year: { $year: "$createdAt" },
+          amount: 1,
+        },
+      },
+      {
+        $match: {
+          year: year,
+          week: week,
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: "$total" },
+        },
+      },
+    ]);
+    const orders = await orderModel.aggregate([
+      {
+        $project: {
+          week: { $week: "$createdAt" },
+
+          year: { $year: "$createdAt" },
+        },
+      },
+      {
+        $match: {
+          year: year,
+          week: week,
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+        },
+      },
+    ]);
+    const transactions = await transactionModel.aggregate([
+      {
+        $project: {
+          week: { $week: "$createdAt" },
+
+          year: { $year: "$createdAt" },
+        },
+      },
+      {
+        $match: {
+          year: year,
+          week: week,
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+        },
+      },
+    ]);
+    const dailyUsers = await userModel.aggregate([
+      {
+        $project: {
+          week: { $week: "$createdAt" },
+
+          year: { $year: "$createdAt" },
+        },
+      },
+      {
+        $match: {
+          year: year,
+        },
+      },
+      {
+        $group: {
+          _id: "$week",
+          total: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+    const dailyOrders = await orderModel.aggregate([
+      {
+        $project: {
+          week: { $week: "$createdAt" },
+
+          year: { $year: "$createdAt" },
+        },
+      },
+      {
+        $match: {
+          year: year,
+        },
+      },
+      {
+        $group: {
+          _id: "$week",
+          total: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+    const dailyTransactions = await transactionModel.aggregate([
+      {
+        $project: {
+          week: { $week: "$createdAt" },
+
+          year: { $year: "$createdAt" },
+        },
+      },
+      {
+        $match: {
+          year: year,
+        },
+      },
+      {
+        $group: {
+          _id: "$week",
+          total: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+    const dailyPayments = await transactionModel.aggregate([
+      {
+        $project: {
+          week: { $week: "$createdAt" },
+
+          year: { $year: "$createdAt" },
+          total: 1,
+        },
+      },
+      {
+        $match: {
+          year: year,
+        },
+      },
+      {
+        $group: {
+          _id: "$week",
+          total: { $sum: "$total" },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+    return res.send({
+      users: users,
+      payments: payments,
+      orders: orders,
+      transactions: transactions,
+      dailyUsers,
+      dailyOrders,
+      dailyTransactions,
+      dailyPayments,
+    });
+  }
+  if (time == "monthly") {
+    const users = await userModel.aggregate([
+      {
+        $project: {
+          month: { $month: "$createdAt" },
+
+          year: { $year: "$createdAt" },
+        },
+      },
+      {
+        $match: {
+          year: year,
+          month: month,
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+        },
+      },
+    ]);
+    const orders = await orderModel.aggregate([
+      {
+        $project: {
+          month: { $month: "$createdAt" },
+
+          year: { $year: "$createdAt" },
+        },
+      },
+      {
+        $match: {
+          year: year,
+          month: month,
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+        },
+      },
+    ]);
+    const payments = await transactionModel.aggregate([
+      {
+        $project: {
+          month: { $month: "$createdAt" },
+
+          year: { $year: "$createdAt" },
+          total: 1,
+        },
+      },
+      {
+        $match: {
+          year: year,
+          month: month,
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: "$total" },
+        },
+      },
+    ]);
+    const transactions = await transactionModel.aggregate([
+      {
+        $project: {
+          month: { $month: "$createdAt" },
+
+          year: { $year: "$createdAt" },
+        },
+      },
+      {
+        $match: {
+          year: year,
+          month: month,
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+        },
+      },
+    ]);
+    const dailyUsers = await userModel.aggregate([
+      {
+        $project: {
+          month: { $month: "$createdAt" },
+
+          year: { $year: "$createdAt" },
+        },
+      },
+      {
+        $match: {
+          year: year,
+        },
+      },
+      {
+        $group: {
+          _id: "$month",
+          total: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+    const dailyOrders = await orderModel.aggregate([
+      {
+        $project: {
+          month: { $month: "$createdAt" },
+
+          year: { $year: "$createdAt" },
+        },
+      },
+      {
+        $match: {
+          year: year,
+        },
+      },
+      {
+        $group: {
+          _id: "$month",
+          total: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+    const dailyTransactions = await transactionModel.aggregate([
+      {
+        $project: {
+          month: { $month: "$createdAt" },
+
+          year: { $year: "$createdAt" },
+        },
+      },
+      {
+        $match: {
+          year: year,
+        },
+      },
+      {
+        $group: {
+          _id: "$month",
+          total: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+    const dailyPayments = await transactionModel.aggregate([
+      {
+        $project: {
+          month: { $month: "$createdAt" },
+
+          year: { $year: "$createdAt" },
+          total: 1,
+        },
+      },
+      {
+        $match: {
+          year: year,
+        },
+      },
+      {
+        $group: {
+          _id: "$month",
+          total: { $sum: "$total" },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+    return res.send({
+      users: users,
+      payments: payments,
+      orders: orders,
+      transactions: transactions,
+      dailyUsers,
+      dailyOrders,
+      dailyTransactions,
+      dailyPayments,
+    });
   }
 });

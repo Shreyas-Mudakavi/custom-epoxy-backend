@@ -12,6 +12,7 @@ const userRoutes = require("./routers/userRoutes");
 const quoteRoutes = require("./routers/quoteRoutes");
 const orderRoutes = require("./routers/orderRoutes");
 const transactionRoutes = require("./routers/transactionRoutes");
+const pdfRoutes = require("./pdf/pdfRoute");
 const adminRoutes = require("./routers/adminRoutes");
 
 app.get("/", async (req, res) => {
@@ -22,6 +23,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/quote", quoteRoutes);
 app.use("/api/order", orderRoutes);
+app.use("/api/pdf", pdfRoutes);
 app.use("/api/transaction", transactionRoutes);
 app.use(error);
 

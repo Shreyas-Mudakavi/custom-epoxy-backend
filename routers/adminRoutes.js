@@ -8,7 +8,6 @@ const {
   getUser,
   deleteAccont,
   getOrderById,
-  updateOrderStatus,
   deleteOrder,
   getAllQuotes,
   getQuote,
@@ -23,12 +22,18 @@ const {
   deleteQuoteImage,
   getQuoteImage,
   updateQuoteImage,
+  updateTransaction,
+  updateOrderPriceObj,
+  updateOrderStatus,
+  getStatistics,
 } = require("../controllers/adminController");
 const { upload } = require("../utils/s3");
 
 const router = express.Router();
 
 router.post("/login", adminLogin);
+
+router.get("/statistics/:time", auth, isAdmin, getStatistics);
 
 router.post("/image", upload.single("image"), postSingleImage);
 router.post("/multi-image", upload.array("image"), postMultipleImages);
@@ -40,7 +45,8 @@ router.delete("/users/:id", auth, isAdmin, deleteAccont);
 
 router.get("/orders/all", auth, isAdmin, getAllOrders);
 router.get("/orders/:id", auth, isAdmin, getOrderById);
-router.put("/orders/:id", auth, isAdmin, updateOrderStatus);
+router.put("/orders/:id", auth, isAdmin, updateOrderPriceObj);
+router.put("/ordersStatus/:id", auth, isAdmin, updateOrderStatus);
 router.delete("/orders/:id", auth, isAdmin, deleteOrder);
 
 router.get("/getAllQuotes/all", auth, isAdmin, getAllQuotes);
@@ -49,6 +55,7 @@ router.delete("/delete-quote/:id", auth, isAdmin, deleteQuote);
 
 router.get("/getAllTransactions/all", auth, isAdmin, getAllTransactions);
 router.get("/getTransaction/:id", auth, isAdmin, getTransaction);
+router.put("/updateTransaction/:id", auth, isAdmin, updateTransaction);
 router.get("/delete-Transaction/:id", auth, isAdmin, deleteTransaction);
 
 router.post("/add-prodImage", auth, isAdmin, addProductImage);

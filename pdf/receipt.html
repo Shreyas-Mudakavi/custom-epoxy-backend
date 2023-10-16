@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      html {
+        zoom: 0.55;
+      }
+
+      table,
+      tr,
+      td,
+      th,
+      tbody,
+      thead,
+      tfoot {
+        page-break-inside: avoid !important;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+      }
+
+      .container {
+        padding: 20px;
+      }
+
+      .details {
+        margin-bottom: 20px;
+      }
+
+      table {
+        margin: 0 auto;
+        margin-top: 2rem;
+        width: 40%;
+        border-collapse: collapse;
+        border: 1px solid #000;
+      }
+
+      table,
+      td,
+      th {
+        text-align: center;
+        border: 1px solid;
+      }
+
+      th,
+      td {
+        padding: 1rem 1.5rem;
+      }
+
+      .other-info {
+        display: flex !important;
+      }
+
+      td,
+      p {
+        font-size: 1.5rem;
+      }
+
+      th {
+        /* td:first-child { */
+        font-weight: bold;
+        width: 300px;
+      }
+
+      .comments ul {
+        list-style-type: none;
+        padding-left: 0;
+      }
+
+      .comments li {
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div>
+        <h1 style="text-align: center">{{heading}}</h1>
+      </div>
+
+      <div class="other-info">
+        <p>Name: {{user.username}}</p>
+      </div>
+      <div class="other-info">
+        <p>Status: {{status}}</p>
+      </div>
+      <!-- <tr>
+      <td>Method:</td>
+      <td>{{method}}</td>
+    </tr> -->
+      <div class="other-info">
+        <p>Date: {{updatedAt}}</p>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Net Price</th>
+            <th>Upfront Amount</th>
+            <th>Taxes</th>
+            <th>Hidden Cost</th>
+            <th>Total</th>
+            <th>Outstanding Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- <tr>
+          <td>Transaction Id:</td>
+          <td>{{_id}}</td>
+        </tr> -->
+          <tr>
+            <td>{{priceAsPerQuote.netPrice}}</td>
+
+            <td>{{priceAsPerQuote.upfrontAmount}}</td>
+
+            <td>{{priceAsPerQuote.taxes}}</td>
+
+            <td>{{priceAsPerQuote.hiddenCost}}</td>
+
+            <td>{{priceAsPerQuote.total}}</td>
+
+            <td>{{Outstanding_amount}}</td>
+          </tr>
+
+          <!-- <tr>
+            <td>Updated At Date:</td>
+            <td>{{updatedAt}}</td>
+          </tr> -->
+          <!-- <tr>
+          <td>Plan:</td>
+          <td>{{plan}}</td>
+        </tr> -->
+          <!-- <tr>
+          <td>Warranty:</td>
+          <td>{{warranty}}</td>
+        </tr> -->
+        </tbody>
+      </table>
+    </div>
+  </body>
+</html>
