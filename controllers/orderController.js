@@ -1,8 +1,64 @@
+const fs = require("fs");
+const path = require("path");
+const pdf = require("pdf-creator-node");
+const { s3UploadRportv2 } = require("../utils/s3");
 const orderModel = require("../models/Order");
 const transactionModel = require("../models/Transactions");
 const catchAsyncError = require("../utils/catchAsyncError");
 const ErrorHandler = require("../utils/errorHandler");
 const { v4: uuid } = require("uuid");
+
+// Read HTML Template
+const templateHtml = (templateName) => {
+  const templatePath = path.join(__dirname, templateName);
+  return fs.readFileSync(templatePath, "utf-8");
+};
+
+const options = {
+  format: "A3",
+  orientation: "portrait",
+  border: "10mm",
+  footer: {
+    height: "10mm",
+    contents: {
+      default:
+        '<span style="color: #444; float: right; margin-top: 20px;">{{page}}</span>',
+    },
+  },
+};
+
+const sendReport = async (templateName, data) => {
+  // const sendReport = async (templateName, data, res) => {
+  const report = await pdf.create(
+    {
+      html: templateHtml(templateName),
+      data,
+      path: "./output.pdf",
+      type: "buffer",
+    },
+    options
+  );
+
+  // res.setHeader("Content-Type", "application/pdf");
+  // console.log("reprt ", report);
+
+  return report;
+};
+
+const formattedDate = (date) => {
+  if (!date || isNaN(date)) return;
+  return date.toISOString().split("T")[0];
+};
+
+const formatedOrder = (order) => {
+  order.updatedAt = formattedDate(order.updatedAt);
+  return order;
+};
+
+const formatedTransaction = (transaction) => {
+  transaction.createdAt = formattedDate(transaction.createdAt);
+  return transaction;
+};
 
 exports.getAllOrders = catchAsyncError(async (req, res, next) => {
   if (req.query.filter === "all") {
@@ -122,6 +178,7 @@ exports.getAllOrders = catchAsyncError(async (req, res, next) => {
 
 exports.getOrder = catchAsyncError(async (req, res, next) => {
   let order;
+  let pdf;
   const orderDetails = await orderModel
     .findById(req.params.id)
     .populate("user")
@@ -168,6 +225,22 @@ exports.getOrder = catchAsyncError(async (req, res, next) => {
     order = orderDetails;
   }
 
+  if (order.Outstanding_amount > 0) {
+    order.createdAt = formattedDate(order.createdAt);
+
+    const report = await sendReport("receipt.html", {
+      heading: "CUSTOM EPOXY - Price breakdown",
+      ...formatedOrder(order.toJSON()),
+    });
+
+    const results = await s3UploadRportv2(report);
+
+    pdf = {
+      link: results.Location,
+      updatedAt: order.updatedAt,
+    };
+  }
+
   let screen_message;
   let progress_status;
   let progress_text = [
@@ -210,6 +283,7 @@ exports.getOrder = catchAsyncError(async (req, res, next) => {
       progress_text: progress_text,
       progress_status: progress_status,
     },
+    pdf,
     order: order,
   });
 });
@@ -295,7 +369,24 @@ exports.paymentOffline = catchAsyncError(async (req, res, next) => {
     paymentMethod: "Offline",
     total: total,
   });
-  await newTransaction.save();
+  const savedTransaction = await newTransaction.save();
+
+  const transaction = await transactionModel
+    .findById(savedTransaction._id)
+    .populate("user")
+    .populate("quote");
+
+  const report = await sendReport("singleReceipt.html", {
+    heading: "CUSTOM EPOXY - Receipt",
+    ...formatedTransaction(transaction.toJSON()),
+  });
+  const results = await s3UploadRportv2(report);
+
+  await transactionModel.findByIdAndUpdate(
+    { _id: transaction._id },
+    { link: results.Location },
+    { new: true }
+  );
 
   await orderModel.updateOne(
     { _id: req.params.id },

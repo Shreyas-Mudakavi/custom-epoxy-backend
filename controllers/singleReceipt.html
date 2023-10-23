@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Client Orders</title>
+    <style>
+      html {
+        zoom: 0.55;
+      }
+
+      .other-info {
+        display: flex !important;
+        margin: 0.8rem 0rem;
+      }
+
+      table,
+      tr,
+      td,
+      th,
+      tbody,
+      thead,
+      tfoot {
+        text-align: center;
+        page-break-inside: avoid !important;
+      }
+
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+
+      .order-table-format {
+        margin: 0 auto;
+        margin-top: 2rem;
+        width: 60%;
+      }
+
+      th,
+      td {
+        padding: 1rem 1.5rem;
+        border: 1px solid black;
+      }
+
+      th {
+        background-color: #f2f2f2;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1 style="text-align: center">{{heading}}</h1>
+
+    <div class="other-info">
+      <p>Name: {{user.username}}</p>
+    </div>
+
+    <div class="other-info">
+      <p>Transaction ID: {{transactionId}}</p>
+    </div>
+
+    <div class="order-table-format">
+      <h3>Quote Details:</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Wood</th>
+            <th>Shape</th>
+            <th>Colour</th>
+            <th>Place Of Use</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{{quote.wood}}</td>
+
+            <td>{{quote.shape}}</td>
+
+            <td>{{quote.color}}</td>
+
+            <td>{{quote.placeOfUse}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="order-table-format">
+      <h3>Your Transactions:</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>Transaction ID</th>
+            <th>Date/Entry</th>
+            <th>Status</th>
+            <th>Payment Method</th>
+            <th>Total Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>{{transactionId}}</td>
+            <td>{{createdAt}}</td>
+            <td>{{status}}</td>
+            <td>{{paymentMethod}}</td>
+            <td>${{total}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </body>
+</html>

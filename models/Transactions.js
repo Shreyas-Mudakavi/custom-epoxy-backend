@@ -21,6 +21,9 @@ const transactionSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    link: {
+      type: String,
+    },
     paymentMethod: {
       type: String,
       required: true,
