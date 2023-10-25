@@ -276,13 +276,22 @@ exports.getOrder = catchAsyncError(async (req, res, next) => {
   }
   progress_status = progress_text.indexOf(order?.status) + 1;
 
+  let progress;
+  if (progress_status === 1) {
+    progress = {
+      progress_text: progress_text,
+    };
+  } else {
+    progress = {
+      progress_text: progress_text,
+      progress_status: progress_status,
+    };
+  }
+
   res.status(200).json({
     message: "Order details are as follows",
     screen_message: screen_message,
-    progress: {
-      progress_text: progress_text,
-      progress_status: progress_status,
-    },
+    progress: progress,
     pdf,
     order: order,
   });
