@@ -225,7 +225,8 @@ exports.getOrder = catchAsyncError(async (req, res, next) => {
     order = orderDetails;
   }
 
-  if (order.Outstanding_amount > 0) {
+  if (order.priceAsPerQuote.total > 0) {
+    // if (order.Outstanding_amount > 0) {
     order.createdAt = formattedDate(order.createdAt);
 
     const report = await sendReport("receipt.html", {
